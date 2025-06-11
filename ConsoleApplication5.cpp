@@ -9,199 +9,56 @@
 
 using CvImg = cv::Mat;
 
-void filter(const cv::Mat& mat, cv::Mat& dst, const cv::Mat& mask);
-
-void homogenOp(cv::Mat targetImg, cv::Mat& dst, int maskSize);
-
-void differOp(cv::Mat targetImg, cv::Mat& dst, int maskSize);
-
-void differential(const CvImg& target, CvImg& dst, float data1[], float data2[]);
-
 int main()
 {
-	cv::Mat mat = cv::imread("Test.jpg", cv::IMREAD_GRAYSCALE);
-	float prewitVertical[] =
-	{
-		-1.0f, 0.0f, 1.0f,
-		-1.0f, 0.0f, 1.0f,
-		-1.0f, 0.0f, 1.0f
-	};
-
-	float prewitHorizontal[] =
-	{
-		-1.0f, -1.0f, -1.0f,
-		0.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 1.0f
-	};
-
-	float sobelVertical[] =
-	{
-		-1.0f, 0.0f, 1.0f,
-		-1.0f, 0.0f, 1.0f,
-		-1.0f, 0.0f, 1.0f
-	};
-
-	float sobelHorizontal[] =
-	{
-		-2.0f, -2.0f, -2.0f,
-		0.0f, 0.0f, 0.0f,
-		2.0f, 2.0f, 2.0f
-	};
-
-	float laplacianMaskFour[] =
-	{
-		0.0f, -1.0f, 0.0f,
-		-1.0f, 4.0f, -1.0f,
-		0.0f, -1.0f, 0.0f
-	};
-
-	float laplacianMaskEight[] =
-	{
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 8.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f
-	};
-
-	std::string original = "Original";
-	std::string prewit = "Prewit Mask";
-	std::string sobel = "Sobel Mask";
-	std::string laplacianFour = "Laplacian Mask 4";
-	std::string laplacianEight = "Laplacian Mask 8";
-	cv::namedWindow(original, cv::WINDOW_NORMAL);
-	cv::namedWindow(prewit, cv::WINDOW_NORMAL);
-	cv::namedWindow(sobel, cv::WINDOW_NORMAL);
-	cv::namedWindow(laplacianFour, cv::WINDOW_NORMAL);
-	cv::namedWindow(laplacianEight, cv::WINDOW_NORMAL);
+	CvImg img = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
 	
-	CvImg laplacianFourDst;
-	differential(mat, laplacianFourDst, laplacianMaskFour, laplacianMaskFour);
-
-	CvImg laplacianEightDst;
-	differential(mat, laplacianEightDst, laplacianMaskEight, laplacianMaskEight);
-	
-	cv::imshow(original, mat);
-	cv::imshow(laplacianFour, laplacianFourDst);
-	cv::imshow(laplacianEight, laplacianEightDst);
-	
-	cv::waitKey();
-	cv::destroyAllWindows();
-	
-	return 0;
-}
-
-void filter(const cv::Mat& mat, cv::Mat& dst, const cv::Mat& mask)
-{
-	dst = cv::Mat(mat.size(), CV_8U, cv::Scalar(0));
-	cv::Point h_m = mask.size() / 2;
-	for (int filterYIdx = h_m.y; filterYIdx < mat.rows - h_m.y; filterYIdx++)
-	{
-		for (int filterXIdx = h_m.x; filterXIdx < mat.cols - h_m.x; filterXIdx++)
+	short data1[] =
 		{
-			float fSum = 0.0f;
-			for (int u = 0; u < mask.rows; u++)
-			{
-				for (int v = 0; v < mask.cols; v++)
-				{
-					const int targetY = filterYIdx + u - h_m.y;
-					const int targetX = filterXIdx + v - h_m.x;
-					if (targetY >= 0 && targetY < mat.rows && targetX >= 0 && targetX < mat.cols)
-					{
-						fSum += mat.at<uchar>(targetY, targetX) * mask.at<float>(u, v);
-					}
-				}
-			}
+			0, 1, 0,
+			1, -4, 1,
+			0, 1, 0
+		};
 
-			dst.at<uchar>(filterYIdx, filterXIdx) = static_cast<uchar>(fSum);
-		}
-	}
-}
-
-void homogenOp(cv::Mat targetImg, cv::Mat& dst, int maskSize)
-{
-	dst = cv::Mat(targetImg.size(), CV_8U, cv::Scalar(0));
-	cv::Point maskingCenter(maskSize / 2, maskSize / 2);
-	for (int i = maskingCenter.y; i < targetImg.rows - maskingCenter.y; i++)
-	{
-		for (int j = maskingCenter.x; j < targetImg.cols - maskingCenter.x; j++)
+	short data2[] =
 		{
-			uchar max = std::numeric_limits<uchar>::min();
-			for (int u = 0; u < maskSize; u++)
-			{
-				for (int v = 0; v < maskSize; v++)
-				{
-					const int targetY = i + u - maskingCenter.y;
-					const int targetX = j + v - maskingCenter.x;
-					uchar difference = abs(targetImg.at<uchar>(i, j) - targetImg.at<uchar>(targetY, targetX));
-					if (difference > max)
-						max = difference;
-				}
-			}
-		}
-	}
-}
+			-1, -1, -1,
+			-1, 8, -1,
+			-1, -1, -1
+		};
 
-void differOp(cv::Mat targetImg, cv::Mat& dst, int maskSize)
-{
-	dst = cv::Mat(targetImg.size(), CV_8U, cv::Scalar(0));
-	cv::Point maskingCenter(maskSize / 2, maskSize / 2);
-	const int maskLenght = maskSize * maskSize;
-	for (int i = maskingCenter.y; i < targetImg.rows - maskingCenter.y; i++)
-	{
-		for (int j = maskingCenter.x; j < targetImg.cols - maskingCenter.x; j++)
-		{
-			std::vector<uchar> mask{};
-			mask.reserve(maskLenght);
-			for (int u = 0, k = 0; u < maskSize; u++)
-			{
-				for (int v = 0; v < maskSize; v++, k++)
-				{
-					const int targetY = i + u - maskingCenter.y;
-					const int targetX = j + v - maskingCenter.x;
-					uchar pixelValue = targetImg.at<uchar>(targetY, targetX);
-					mask.push_back(pixelValue);
-				}
-			}
+	CvImg dst1, dst2, dst3;
+	CvImg laplacianMask4(3, 3, CV_16S, data1);
+	CvImg laplacianMask8(3, 3, CV_16S, data2);
 
-			uchar max = std::numeric_limits<uchar>::min();
-			for (int k = 0; k < maskLenght / 2; k++)
-			{
-				const int start = mask[k];
-				const int end = mask[maskLenght - k - 1];
-				const uchar difference = abs(start - end);
-				max = std::max(difference, max);
-			}
-
-			dst.at<uchar>(i, j) = max;
-		}
-	}
-}
-
-void differential(const CvImg& target, CvImg& dst, float data1[], float data2[])
-{
-	CvImg dst1;
-	CvImg dst2;
-
-	CvImg mask1(3, 3, CV_32F, data1);
-	CvImg mask2(3, 3, CV_32F, data2);
-
-	cv::filter2D(target, dst1, CV_32F, mask1);
-	cv::filter2D(target, dst2, CV_32F, mask2);
-	cv::magnitude(dst1, dst2, dst);
-	dst.convertTo(dst, CV_8U);
+	cv::filter2D(img, dst1, CV_16S, laplacianMask4);
+	cv::filter2D(img, dst2, CV_16S, laplacianMask8);
+	cv::Laplacian(img, dst3, CV_16S, 1);
 
 	cv::convertScaleAbs(dst1, dst1);
 	cv::convertScaleAbs(dst2, dst2);
-	std::string horizontalMask = "Horizontal Mask";
-	std::string verticalMask = "Vertical Mask";
-	cv::namedWindow(horizontalMask, cv::WINDOW_NORMAL);
-	cv::namedWindow(verticalMask, cv::WINDOW_NORMAL);
-	cv::imshow(horizontalMask, dst1);
-	cv::imshow(verticalMask, dst2);
+	cv::convertScaleAbs(dst3, dst3);
+
+	std::string original = "original";
+	std::string filer4D = "filer4D";
+	std::string filer8D = "filer8D";
+	std::string laplacian = "laplacianOpenCv";
+
+	cv::namedWindow(original, cv::WINDOW_NORMAL);
+	cv::namedWindow(filer4D, cv::WINDOW_NORMAL);
+	cv::namedWindow(filer8D, cv::WINDOW_NORMAL);
+	cv::namedWindow(laplacian, cv::WINDOW_NORMAL);
+
+	cv::imshow(original, img);
+	cv::imshow(filer4D, dst1);
+	cv::imshow(filer8D, dst2);
+	cv::imshow(laplacian, dst3);
+	cv::waitKey(0);
+
+	return 0;
 }
 
-
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
+// Run program: Ctrl + F5 or Debug > Start Without Debugging menu	
 // Debug program: F5 or Debug > Start Debugging menu
 
 // Tips for Getting Started: 
