@@ -12,7 +12,6 @@ using CvImg = cv::Mat;
 int main()
 {
 	CvImg img = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
-	
 	short data1[] =
 		{
 			0, 1, 0,
@@ -27,32 +26,44 @@ int main()
 			-1, -1, -1
 		};
 
-	CvImg dst1, dst2, dst3;
+	constexpr int nBlurDiemension  = 40;
+	constexpr int nBlurDimensionSquared  = nBlurDiemension * nBlurDiemension;
+	std::vector<float> vBlurring(nBlurDimensionSquared, 1.0f / (nBlurDimensionSquared));
+	CvImg CvImgLaplaceMask4;
+	CvImg CvImgLaplaceMask8;
+	CvImg CvImgLaplaceOpenCv;
+	CvImg CvImgBlurred;
 	CvImg laplacianMask4(3, 3, CV_16S, data1);
 	CvImg laplacianMask8(3, 3, CV_16S, data2);
+	CvImg blurringMask(nBlurDiemension, nBlurDiemension, CV_32F, vBlurring.data());
 
-	cv::filter2D(img, dst1, CV_16S, laplacianMask4);
-	cv::filter2D(img, dst2, CV_16S, laplacianMask8);
-	cv::Laplacian(img, dst3, CV_16S, 1);
+	cv::filter2D(img, CvImgLaplaceMask4, CV_16S, laplacianMask4);
+	cv::filter2D(img, CvImgLaplaceMask8, CV_16S, laplacianMask8);
+	cv::filter2D(img, CvImgBlurred, CV_32F, blurringMask);
+	cv::Laplacian(img, CvImgLaplaceOpenCv, CV_16S, 1);
 
-	cv::convertScaleAbs(dst1, dst1);
-	cv::convertScaleAbs(dst2, dst2);
-	cv::convertScaleAbs(dst3, dst3);
+	cv::convertScaleAbs(CvImgLaplaceMask4, CvImgLaplaceMask4);
+	cv::convertScaleAbs(CvImgLaplaceMask8, CvImgLaplaceMask8);
+	cv::convertScaleAbs(CvImgLaplaceOpenCv, CvImgLaplaceOpenCv);
+	cv::convertScaleAbs(CvImgBlurred, CvImgBlurred);
 
 	std::string original = "original";
 	std::string filer4D = "filer4D";
 	std::string filer8D = "filer8D";
 	std::string laplacian = "laplacianOpenCv";
+	std::string blurred = "blurred";
 
 	cv::namedWindow(original, cv::WINDOW_NORMAL);
 	cv::namedWindow(filer4D, cv::WINDOW_NORMAL);
 	cv::namedWindow(filer8D, cv::WINDOW_NORMAL);
 	cv::namedWindow(laplacian, cv::WINDOW_NORMAL);
-
+	cv::namedWindow(blurred, cv::WINDOW_NORMAL);
+	
 	cv::imshow(original, img);
-	cv::imshow(filer4D, dst1);
-	cv::imshow(filer8D, dst2);
-	cv::imshow(laplacian, dst3);
+	cv::imshow(filer4D, CvImgLaplaceMask4);
+	cv::imshow(filer8D, CvImgLaplaceMask8);
+	cv::imshow(laplacian, CvImgLaplaceOpenCv);
+	cv::imshow(blurred, CvImgBlurred);
 	cv::waitKey(0);
 
 	return 0;
