@@ -78,9 +78,6 @@
     <IncludePath>C:\Users\admin\vcpkg\installed\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\admin\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <VcpkgInstalledDir>..\..\..\vcpkg\installed</VcpkgInstalledDir>
-  </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <VcpkgInstalledDir>..\..\..\vcpkg\installed</VcpkgInstalledDir>
   </PropertyGroup>
