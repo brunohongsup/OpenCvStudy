@@ -3,7 +3,7 @@
 
 int main() {
 	// Load the image in grayscale
-	cv::Mat img = cv::imread("image.jpg", cv::IMREAD_GRAYSCALE);
+	cv::Mat img = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
 	if (img.empty()) {
 		std::cerr << "Could not open the image!\n";
 		return -1;
@@ -18,8 +18,12 @@ int main() {
 	cv::Canny(blur, edges, 100, 200); // lower threshold: 100, upper: 200
 
 	// Step 3: Show results
-	cv::imshow("Original (Grayscale)", img);
-	cv::imshow("Canny Edge Detection", edges);
+	std::string s1 = "Original (Grayscale)";
+	std::string s2 = "Canny Edge Detection";
+	cv::namedWindow(s1, cv::WINDOW_NORMAL);
+	cv::namedWindow(s2, cv::WINDOW_NORMAL);
+	cv::imshow(s1, img);
+	cv::imshow(s2, edges);
 	cv::waitKey(0); // Wait for a key press
 
 	return 0;
